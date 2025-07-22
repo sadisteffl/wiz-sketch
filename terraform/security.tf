@@ -119,7 +119,7 @@ resource "aws_cloudwatch_event_rule" "guardduty_high_severity_rule" {
   name_prefix = "guardduty-high-severity-rule-"
   description = "Triggers on critical or high severity GuardDuty findings."
   event_pattern = jsonencode({
-    source      = ["aws.guardduty"],
+    source        = ["aws.guardduty"],
     "detail-type" = ["GuardDuty Finding"],
     detail = {
       severity = [{ "numeric" : [">=", 7] }]

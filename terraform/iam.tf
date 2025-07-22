@@ -60,8 +60,8 @@ resource "aws_iam_instance_profile" "sketchy_mongoprofile" {
 
 # EKS OIDC Provider
 resource "aws_iam_openid_connect_provider" "eks" {
-  url = aws_eks_cluster.sketchy_main.identity[0].oidc[0].issuer
-  client_id_list = ["sts.amazonaws.com"]
+  url             = aws_eks_cluster.sketchy_main.identity[0].oidc[0].issuer
+  client_id_list  = ["sts.amazonaws.com"]
   thumbprint_list = ["9e99a48a9960b14926bb7f3b02e22da0afd10df6"]
 }
 
@@ -83,7 +83,7 @@ resource "aws_iam_role" "k8s_sa_sketchydraw" {
   name = "IRSA-SketchyDraw"
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
-     Statement = [{
+    Statement = [{
       Effect = "Allow",
       Principal = {
         Federated = aws_iam_openid_connect_provider.eks.arn
@@ -124,7 +124,7 @@ resource "aws_iam_role_policy" "cloudtrail_cloudwatch_policy" {
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
-       {
+      {
         Action = [
           "logs:CreateLogStream",
           "logs:PutLogEvents"

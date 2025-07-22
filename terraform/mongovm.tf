@@ -29,8 +29,8 @@ resource "aws_instance" "db_server" {
   }
 
   tags = {
-    Name = "wiz-exercise-db-vm"
-    Owner = "Sadi" 
+    Name  = "wiz-exercise-db-vm"
+    Owner = "Sadi"
   }
 }
 

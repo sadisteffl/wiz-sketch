@@ -55,7 +55,7 @@ resource "aws_iam_role_policy_attachment" "ecr_read_only_policy" {
 # https://www.wiz.io/blog/nvidia-ai-vulnerability-cve-2025-23266-nvidiascape
 
 resource "aws_eks_node_group" "gpu_nodes" {
- cluster_name = aws_eks_cluster.sketchy_main.name
+  cluster_name    = aws_eks_cluster.sketchy_main.name
   node_group_name = "gpu-nodes"
   node_role_arn   = aws_iam_role.sketchy_eks_node_role.arn
   subnet_ids = [

@@ -12,7 +12,7 @@ resource "aws_sns_topic" "billing_alerts" {
 resource "aws_sns_topic_subscription" "email_target" {
   topic_arn = aws_sns_topic.billing_alerts.arn
   protocol  = "email"
-  endpoint = "sadisteffl@gmail.com"
+  endpoint  = "sadisteffl@gmail.com"
 }
 
 resource "aws_budgets_budget" "daily_cost_limit" {
