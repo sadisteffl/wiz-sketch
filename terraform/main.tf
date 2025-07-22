@@ -2,7 +2,7 @@
 terraform {
   backend "remote" {
     # The name of your Terraform Cloud organization.
-    organization = "wiz-sketch"
+    organization = "wiz-sketch-ai"
 
     # The name of the Terraform Cloud workspace to store Terraform state files in.
     workspaces {
