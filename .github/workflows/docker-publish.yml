@@ -18,9 +18,11 @@ jobs:
       matrix:
         include:
           - app-name: 'sketchy-frontend-app'
-            dockerfile: './frontend/Dockerfile' 
+            dockerfile: './frontend/Dockerfile'
+            context: './frontend' # <-- Added build context for frontend
           - app-name: 'sketchy-backend-app'
-            dockerfile: './backend/Dockerfile' 
+            dockerfile: './backend/Dockerfile'
+            context: './backend'  # <-- Added build context for backend
 
     steps:
     - name: 'Checkout'
@@ -41,8 +43,8 @@ jobs:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         IMAGE_TAG: ${{ github.sha }}
       run: |
-        # Build the image with the git SHA tag
-        docker build -t $ECR_REGISTRY/${{ matrix.app-name }}:$IMAGE_TAG -f ${{ matrix.dockerfile }} .
+        # Build the image using the correct context
+        docker build -t $ECR_REGISTRY/${{ matrix.app-name }}:$IMAGE_TAG -f ${{ matrix.dockerfile }} ${{ matrix.context }}
         
         # Add the 'latest' tag to the same image
         docker tag $ECR_REGISTRY/${{ matrix.app-name }}:$IMAGE_TAG $ECR_REGISTRY/${{ matrix.app-name }}:latest
