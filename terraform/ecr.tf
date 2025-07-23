@@ -1,7 +1,7 @@
 resource "aws_ecr_repository" "sketchy_frontend_app" {
   name = "sketchy-frontend-app"
 
-  image_tag_mutability = "MUTABLE"
+  image_tag_mutability = "MUTABLE" # <-- This allows you to overwrite the 'latest' tag
 
   image_scanning_configuration {
     scan_on_push = true
@@ -25,7 +25,7 @@ resource "aws_ecr_repository" "sketchy_frontend_app" {
 resource "aws_ecr_repository" "sketchy_backend_app" {
   name = "sketchy-backend-app"
 
-  image_tag_mutability = "MUTABLE"
+  image_tag_mutability = "MUTABLE" # <-- This allows you to overwrite the 'latest' tag
 
   image_scanning_configuration {
     scan_on_push = true
@@ -34,8 +34,6 @@ resource "aws_ecr_repository" "sketchy_backend_app" {
   encryption_configuration {
     encryption_type = "KMS"
     kms_key         = aws_kms_key.ecr_eks_repository_cmk.arn
-
-
   }
 
   tags = {
@@ -47,3 +45,5 @@ resource "aws_ecr_repository" "sketchy_backend_app" {
     ProjectOwner = "Sadi"
   }
 }
+
+# building
