@@ -4,7 +4,7 @@ metadata:
   name: app-ingress
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
-    alb.ingress.kubernetes.io/wafv2-acl-arn: "arn:aws:wafv2:us-east-1:296062560614:regional/webacl/..."
+    alb.ingress.kubernetes.io/wafv2-acl-arn: "arn:aws:wafv2:us-east-1:296062560614:regional/webacl/sketchy_waf/b1dec00c-9334-4fac-ab25-8fa36bae4fc8"
 spec:
   rules:
     - http:

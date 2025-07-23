@@ -1,5 +1,3 @@
-
-# MongoDV - VM
 resource "aws_iam_role" "overly_permissive_role" {
   name = "db-vm-overly-permissive-role"
   assume_role_policy = jsonencode({
@@ -24,14 +22,12 @@ resource "aws_iam_instance_profile" "sketchy_mongoprofile" {
   role = aws_iam_role.overly_permissive_role.name
 }
 
-# EKS OIDC Provider
 resource "aws_iam_openid_connect_provider" "eks" {
   url             = aws_eks_cluster.main.identity[0].oidc[0].issuer
   client_id_list  = ["sts.amazonaws.com"]
   thumbprint_list = ["9e99a48a9960b14926bb7f3b02e22da0afd10df6"]
 }
 
-# Secrets Manager & IRSA
 resource "aws_iam_policy" "secretsmanager_access" {
   name        = "SecretsManagerSketchyDrawAccess"
   description = "Allows pod to read secrets from AWS Secrets Manager"
@@ -69,7 +65,6 @@ resource "aws_iam_role_policy_attachment" "attach_secretsmanager_access" {
   policy_arn = aws_iam_policy.secretsmanager_access.arn
 }
 
-# CloudTrail Roles
 resource "aws_iam_role" "cloudtrail_cloudwatch_role" {
   name = "cloudtrail-cloudwatch-role-${random_id.suffix.hex}"
   assume_role_policy = jsonencode({
@@ -107,28 +102,32 @@ resource "aws_iam_role_policy" "cloudtrail_cloudwatch_policy" {
 }
 
 
-data "aws_iam_openid_connect_provider" "github" {
+resource "aws_iam_openid_connect_provider" "github" {
   url = "https://token.actions.githubusercontent.com"
+
+  client_id_list = [
+    "sts.amazonaws.com"
+  ]
+
+  thumbprint_list = ["6938fd4d9c60c1c808d947850624c9a445a9ac84"]
 }
 
 
 resource "aws_iam_role" "github_actions_ecr_role" {
   name = "github-actions-ecr-role"
 
-  # Trust policy that allows GitHub Actions to assume this role
   assume_role_policy = jsonencode({
-    Version = "2012-10-17",
+    Version   = "2012-10-17",
     Statement = [
       {
-        Effect = "Allow",
+        Effect    = "Allow",
         Principal = {
-\
-          Federated = data.aws_iam_openid_connect_provider.github.arn
+          Federated = aws_iam_openid_connect_provider.github.arn
         },
-        Action = "sts:AssumeRoleWithWebIdentity",
+        Action    = "sts:AssumeRoleWithWebIdentity",
         Condition = {
           StringLike = {
-
+            # This condition restricts access to your specific repository
             "token.actions.githubusercontent.com:sub" = "repo:sadisteffl/wiz-sketch:*"
           }
         }
@@ -141,12 +140,13 @@ resource "aws_iam_role" "github_actions_ecr_role" {
   }
 }
 
+
 resource "aws_iam_policy" "github_actions_ecr_policy" {
   name        = "GitHubActionsECRPolicy"
   description = "Policy for GitHub Actions to access ECR"
 
   policy = jsonencode({
-    Version = "2012-10-17",
+    Version   = "2012-10-17",
     Statement = [
       {
         Sid      = "AllowECRLogin",
@@ -164,7 +164,6 @@ resource "aws_iam_policy" "github_actions_ecr_policy" {
           "ecr:PutImage",
           "ecr:UploadLayerPart"
         ],
-
         Resource = [
           aws_ecr_repository.sketchy_frontend_app.arn,
           aws_ecr_repository.sketchy_backend_app.arn
