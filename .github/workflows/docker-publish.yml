@@ -1,0 +1,54 @@
+name: 'Build and Push Docker Images to ECR'
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  build-and-push:
+    name: 'Build and Push to ECR'
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        include:
+          - app-name: 'sketchy-frontend-app'
+            dockerfile: './frontend/Dockerfile' 
+          - app-name: 'sketchy-backend-app'
+            dockerfile: './backend/Dockerfile' 
+
+    steps:
+    - name: 'Checkout'
+      uses: actions/checkout@v4
+
+    - name: 'Configure AWS Credentials'
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: 'arn:aws:iam::296062560614:role/github-actions-ecr-role'
+        aws-region: 'us-east-1'
+
+    - name: 'Login to Amazon ECR'
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+
+    - name: 'Build, Tag, and Push Image to ECR'
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        # Build the image with the git SHA tag
+        docker build -t $ECR_REGISTRY/${{ matrix.app-name }}:$IMAGE_TAG -f ${{ matrix.dockerfile }} .
+        
+        # Add the 'latest' tag to the same image
+        docker tag $ECR_REGISTRY/${{ matrix.app-name }}:$IMAGE_TAG $ECR_REGISTRY/${{ matrix.app-name }}:latest
+        
+        # Push the image with the git SHA tag
+        docker push $ECR_REGISTRY/${{ matrix.app-name }}:$IMAGE_TAG
+        
+        # Push the image with the 'latest' tag
+        docker push $ECR_REGISTRY/${{ matrix.app-name }}:latest
