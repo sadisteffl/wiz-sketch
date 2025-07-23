@@ -28,4 +28,4 @@ spec:
           driver: secrets-store.csi.k8s.io
           readOnly: true
           volumeAttributes:
-            secretProviderClass: "sketchydraw-secrets"
+            secretProviderClass: "sketchydraw-aws-secrets"

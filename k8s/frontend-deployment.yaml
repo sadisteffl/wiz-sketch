@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: 296062560614.dkr.ecr.us-east-1.amazonaws.com/sketchy-backend-app:latest
+        image: 296062560614.dkr.ecr.us-east-1.amazonaws.com/sketchy-frontend-app:latest
         ports:
         - containerPort: 80
         envFrom: 
