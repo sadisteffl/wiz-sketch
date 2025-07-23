@@ -1,7 +1,7 @@
 resource "aws_ecr_repository" "sketchy_frontend_app" {
   name = "sketchy-frontend-app"
 
-  image_tag_mutability = "IMMUTABLE"
+  image_tag_mutability = "MUTABLE"
 
   image_scanning_configuration {
     scan_on_push = true
@@ -25,7 +25,7 @@ resource "aws_ecr_repository" "sketchy_frontend_app" {
 resource "aws_ecr_repository" "sketchy_backend_app" {
   name = "sketchy-backend-app"
 
-  image_tag_mutability = "IMMUTABLE"
+  image_tag_mutability = "MUTABLE"
 
   image_scanning_configuration {
     scan_on_push = true
