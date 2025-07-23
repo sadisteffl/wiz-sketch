@@ -117,14 +117,14 @@ resource "aws_iam_role" "github_actions_ecr_role" {
   name = "github-actions-ecr-role"
 
   assume_role_policy = jsonencode({
-    Version   = "2012-10-17",
+    Version = "2012-10-17",
     Statement = [
       {
-        Effect    = "Allow",
+        Effect = "Allow",
         Principal = {
           Federated = aws_iam_openid_connect_provider.github.arn
         },
-        Action    = "sts:AssumeRoleWithWebIdentity",
+        Action = "sts:AssumeRoleWithWebIdentity",
         Condition = {
           StringLike = {
             # This condition restricts access to your specific repository
@@ -146,7 +146,7 @@ resource "aws_iam_policy" "github_actions_ecr_policy" {
   description = "Policy for GitHub Actions to access ECR"
 
   policy = jsonencode({
-    Version   = "2012-10-17",
+    Version = "2012-10-17",
     Statement = [
       {
         Sid      = "AllowECRLogin",
