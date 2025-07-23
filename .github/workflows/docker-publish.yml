@@ -54,3 +54,6 @@ jobs:
         
         # Push the image with the 'latest' tag
         docker push $ECR_REGISTRY/${{ matrix.app-name }}:latest
+
+        # testing 
+        
