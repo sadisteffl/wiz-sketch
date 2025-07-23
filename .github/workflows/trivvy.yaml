@@ -1,0 +1,54 @@
+name: Trivy multipurpose security scan
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  trivy:
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write 
+      contents: read
+    strategy:
+      matrix:
+        include:
+          # 1 - Code Dependncies 
+          - scan-type: fs
+            scan-ref: '.'
+            display: "Code/Dependencies"
+          # 2 - Terraform IaC
+          - scan-type: config
+            scan-ref: './terraform'       # path to .tf files
+            display: "Terraform IaC"
+          # Container Images 
+          - scan-type: image
+            image-ref: ghcr.io/$GITHUB_REPOSITORY:${{ github.sha }}
+            # this job also needs the image built beforehand
+            display: "Container Image"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Build the image once; Trivy pulls it from local Docker cache
+      - name: Build image (only for image scan)
+        if: matrix.scan-type == 'image'
+        run: docker build -t ${{ matrix.image-ref }} .
+
+      - name: Trivy ${{ matrix.display }} scan
+        uses: aquasecurity/trivy-action@0.32.0           
+        with:
+          scan-type: ${{ matrix.scan-type }}
+          scan-ref: ${{ matrix.scan-ref || '' }}
+          image-ref: ${{ matrix.image-ref || '' }}
+          format: sarif
+          output: trivy-${{ matrix.scan-type }}.sarif
+          severity: 'CRITICAL,HIGH'
+          ignore-unfixed: true
+          exit-code: '1'            # fail job on findings
+
+      - name: Upload SARIF to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trivy-${{ matrix.scan-type }}.sarif

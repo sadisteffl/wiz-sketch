@@ -1,0 +1,19 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DenySubnetAutoAssignPublicIp",
+      "Effect": "Deny",
+      "Action": [
+        "ec2:CreateSubnet",
+        "ec2:ModifySubnetAttribute"
+      ],
+      "Resource": "arn:aws:ec2:*:*:subnet/*",
+      "Condition": {
+        "Bool": {
+          "ec2:MapPublicIpOnLaunch": "true"
+        }
+      }
+    }
+  ]
+}
