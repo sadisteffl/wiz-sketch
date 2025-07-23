@@ -119,18 +119,18 @@ data "aws_iam_openid_connect_provider" "github" {
 # ------------------------------------------------------------------------------
 resource "aws_iam_role" "github_actions_ecr_role" {
   name = "github-actions-ecr-role"
-  
+
   # Trust policy that allows GitHub Actions to assume this role
   assume_role_policy = jsonencode({
-    Version   = "2012-10-17",
+    Version = "2012-10-17",
     Statement = [
       {
-        Effect    = "Allow",
+        Effect = "Allow",
         Principal = {
           # References your existing OIDC provider
           Federated = data.aws_iam_openid_connect_provider.github.arn
         },
-        Action    = "sts:AssumeRoleWithWebIdentity",
+        Action = "sts:AssumeRoleWithWebIdentity",
         Condition = {
           StringLike = {
             # This condition restricts the role to your specific GitHub repository.
@@ -152,12 +152,12 @@ resource "aws_iam_policy" "github_actions_ecr_policy" {
   description = "Policy for GitHub Actions to access ECR"
 
   policy = jsonencode({
-    Version   = "2012-10-17",
+    Version = "2012-10-17",
     Statement = [
       {
-        Sid    = "AllowECRLogin",
-        Effect = "Allow",
-        Action = "ecr:GetAuthorizationToken",
+        Sid      = "AllowECRLogin",
+        Effect   = "Allow",
+        Action   = "ecr:GetAuthorizationToken",
         Resource = "*"
       },
       {
