@@ -1,0 +1,8 @@
+# sa-sketchydraw.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sa-sketchydraw
+  namespace: default
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::658245006980:role/IRSA-SketchyDraw
