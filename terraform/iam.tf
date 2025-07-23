@@ -107,16 +107,11 @@ resource "aws_iam_role_policy" "cloudtrail_cloudwatch_policy" {
 }
 
 
-# ------------------------------------------------------------------------------
-# Data source to get your existing GitHub OIDC Provider
-# ------------------------------------------------------------------------------
 data "aws_iam_openid_connect_provider" "github" {
   url = "https://token.actions.githubusercontent.com"
 }
 
-# ------------------------------------------------------------------------------
-# IAM Role and Policy for ECR Access from GitHub Actions
-# ------------------------------------------------------------------------------
+
 resource "aws_iam_role" "github_actions_ecr_role" {
   name = "github-actions-ecr-role"
 
@@ -127,15 +122,14 @@ resource "aws_iam_role" "github_actions_ecr_role" {
       {
         Effect = "Allow",
         Principal = {
-          # References your existing OIDC provider
+\
           Federated = data.aws_iam_openid_connect_provider.github.arn
         },
         Action = "sts:AssumeRoleWithWebIdentity",
         Condition = {
           StringLike = {
-            # This condition restricts the role to your specific GitHub repository.
-            # Replace <YOUR-GITHUB-USERNAME> and <YOUR-REPO-NAME> with your details.
-            "token.actions.githubusercontent.com:sub" = "repo:<YOUR-GITHUB-USERNAME>/<YOUR-REPO-NAME>:*"
+
+            "token.actions.githubusercontent.com:sub" = "repo:sadisteffl/wiz-sketch:*"
           }
         }
       }
