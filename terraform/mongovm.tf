@@ -8,7 +8,7 @@ resource "aws_instance" "db_server" {
   subnet_id              = aws_subnet.public_az1.id
   vpc_security_group_ids = [aws_security_group.db_vm.id]
   iam_instance_profile   = aws_iam_instance_profile.mongo_instance_profile.name
-  key_name               = var.key_name
+  key_name               = "test"
   monitoring             = true
   ebs_optimized          = true
 

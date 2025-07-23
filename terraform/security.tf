@@ -19,25 +19,27 @@ resource "aws_kms_key_policy" "cloudtrail_key_policy" {
 
 data "aws_iam_policy_document" "cloudtrail_key_policy" {
   statement {
-    sid       = "EnableIAMUserPermissions"
-    effect    = "Allow"
-    actions   = ["kms:*"]
-    resources = [aws_kms_key.cloudtrail_key.arn]
+    sid    = "EnableIAMUserPermissions"
+    effect = "Allow"
+    actions = [
+      "kms:*"
+    ]
+    resources = [
+      aws_kms_key.cloudtrail_key.arn
+    ]
     principals {
-      type        = "AWS"
-      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
-    }
-    condition {
-      test     = "StringEquals"
-      variable = "aws:PrincipalType"
-      values   = ["Account"]
+      type = "AWS"
+      identifiers = [
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root",
+        data.aws_caller_identity.current.arn
+      ]
     }
   }
 
   statement {
     sid       = "AllowCloudTrailService"
     effect    = "Allow"
-    actions   = ["kms:DescribeKey", "kms:Encrypt"]
+    actions   = ["kms:DescribeKey", "kms:GenerateDataKey*", "kms:Decrypt"]
     resources = [aws_kms_key.cloudtrail_key.arn]
     principals {
       type        = "Service"
@@ -81,8 +83,11 @@ data "aws_iam_policy_document" "general_service_key_policy" {
     actions   = ["kms:*"]
     resources = ["*"] # This should be scoped to the key ARN for best practice
     principals {
-      type        = "AWS"
-      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
+      type = "AWS"
+      identifiers = [
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root",
+        data.aws_caller_identity.current.arn
+      ]
     }
   }
   statement {
@@ -97,12 +102,7 @@ data "aws_iam_policy_document" "general_service_key_policy" {
   }
 }
 
-resource "aws_guardduty_detector" "this" {
-  enable = true
-  tags = {
-    Name = "wiz-exercise-guardduty-detector"
-  }
-}
+data "aws_guardduty_detector" "this" {}
 
 resource "aws_sns_topic" "guardduty_notifications" {
   name_prefix       = "guardduty-high-severity-findings-"
@@ -193,9 +193,9 @@ resource "aws_cloudtrail" "this" {
   enable_log_file_validation    = true
   enable_logging                = true
   kms_key_id                    = aws_kms_key.cloudtrail_key.arn
-  cloud_watch_logs_group_arn    = aws_cloudwatch_log_group.cloudtrail_logs.arn
+  cloud_watch_logs_group_arn    = "${aws_cloudwatch_log_group.cloudtrail_logs.arn}:*"
   cloud_watch_logs_role_arn     = aws_iam_role.cloudtrail_cloudwatch_role.arn
-  sns_topic_name                = aws_sns_topic.cloudtrail_notifications.arn
+  sns_topic_name                = aws_sns_topic.cloudtrail_notifications.name
 
   insight_selector {
     insight_type = "ApiCallRateInsight"
@@ -416,10 +416,89 @@ resource "aws_wafv2_web_acl" "sketchy_waf" {
     }
   }
 
-
   visibility_config {
     cloudwatch_metrics_enabled = true
     metric_name                = "waf-acl"
     sampled_requests_enabled   = true
+  }
+}
+
+resource "aws_kms_key" "ecr_eks_repository_cmk" {
+  description             = "KMS key for ECR and EKS secrets encryption"
+  deletion_window_in_days = 10
+  enable_key_rotation     = true
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions",
+        Effect = "Allow",
+        Principal = {
+          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        },
+        Action   = "kms:*",
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow ECR service to use the key",
+        Effect = "Allow",
+        Principal = {
+          Service = "ecr.amazonaws.com"
+        },
+        Action = [
+          "kms:Encrypt",
+          "kms:Decrypt",
+          "kms:ReEncrypt*",
+          "kms:GenerateDataKey*",
+          "kms:DescribeKey"
+        ],
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow EKS service to encrypt and decrypt secrets",
+        Effect = "Allow",
+        Principal = {
+          Service = "eks.amazonaws.com"
+        },
+        Action = [
+          "kms:CreateGrant",
+          "kms:Encrypt",
+          "kms:Decrypt",
+          "kms:ReEncrypt*",
+          "kms:GenerateDataKey*",
+          "kms:DescribeKey"
+        ],
+        Resource = "*"
+      }
+    ]
+  })
+
+  tags = {
+    Name         = "ECR_EKS_SharedCMK"
+    Environment  = "Production"
+    ManagedBy    = "Terraform"
+    ProjectOwner = "Sadi"
+  }
+}
+
+data "aws_ssm_parameter" "eks_gpu_ami" {
+  name = "/aws/service/eks/optimized-ami/1.33/amazon-linux-2023/arm64/nvidia/amazon-eks-node-al2023-arm64-nvidia-1.33-v20250704/image_id"
+}
+
+
+
+resource "aws_launch_template" "gpu_nodes_lt" {
+  name_prefix = "gpu-nodes-lt-"
+
+  image_id = data.aws_ssm_parameter.eks_gpu_ami.value
+
+  instance_type = "g5g.xlarge"
+
+  tag_specifications {
+    resource_type = "instance"
+    tags = {
+      Name = "gpu-eks-node"
+    }
   }
 }

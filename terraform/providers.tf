@@ -8,12 +8,12 @@ data "aws_availability_zones" "available" {}
 
 data "aws_partition" "current" {}
 
-data "aws_eks_cluster" "sketchy_main" {
-  name = aws_eks_cluster.sketchy_main.name
+data "aws_eks_cluster" "main" {
+  name = aws_eks_cluster.main.name
 }
 
-data "aws_eks_cluster_auth" "sketchy_main" {
-  name = aws_eks_cluster.sketchy_main.name
+data "aws_eks_cluster_auth" "main" {
+  name = aws_eks_cluster.main.name
 }
 
 data "aws_iam_policy_document" "sns_topic_policy" {

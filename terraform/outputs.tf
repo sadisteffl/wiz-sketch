@@ -13,15 +13,10 @@ output "k8s_security_group_id" {
 }
 
 output "eks_cluster_name" {
-  value = aws_eks_cluster.sketchy_main.name
+  value = aws_eks_cluster.main.name
 }
-
-output "node_group_role_arn" {
-  value = aws_iam_role.sketchy_eks_node_role.arn
-}
-
 output "kubeconfig_command" {
-  value       = "aws eks update-kubeconfig --region ${var.aws_region} --name ${aws_eks_cluster.sketchy_main.name}"
+  value       = "aws eks update-kubeconfig --region ${var.aws_region} --name ${aws_eks_cluster.main.name}"
   description = "Run this to update your kubeconfig after EKS is created"
 }
 

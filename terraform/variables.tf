@@ -22,16 +22,6 @@ variable "db_user" {
   default     = "taskyapp"
 }
 
-variable "key_name" {
-  description = "The name of the EC2 key pair to use for the DB server."
-  type        = string
-}
-
-variable "aws_key_pair_name" {
-  description = "The name of your existing EC2 Key Pair for SSH access."
-  type        = string
-}
-
 
 variable "alert_email" {
   description = "Email to receive CloudTrail alerts"
