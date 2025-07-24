@@ -12,9 +12,7 @@ data "aws_eks_cluster" "sketch-ai-cluster" {
   name = aws_eks_cluster.sketch-ai-cluster.name
 }
 
-data "aws_eks_cluster_auth" "sketch-ai-cluster" {
-  name = aws_eks_cluster.sketch-ai-cluster.name
-}
+
 data "aws_iam_policy_document" "sns_topic_policy" {
   statement {
     effect  = "Allow"

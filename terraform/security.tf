@@ -112,7 +112,7 @@ resource "aws_sns_topic" "guardduty_notifications" {
 resource "aws_sns_topic_subscription" "guardduty_email_alert" {
   topic_arn = aws_sns_topic.guardduty_notifications.arn
   protocol  = "email"
-  endpoint  = var.alert_email
+  endpoint  = "sadisteffl@gmail.com"
 }
 
 resource "aws_cloudwatch_event_rule" "guardduty_high_severity_rule" {

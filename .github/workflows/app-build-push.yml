@@ -1,0 +1,57 @@
+name: App Build & Push to ECR
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'app/backend/**'
+      - 'app/attack/**'
+      - '.github/workflows/app-build-push.yml'
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build-and-push:
+    name: Build & Push Backend and PoC Images
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_REGION: us-east-1
+      ECR_BACKEND_REPO: sketchydraw-backend
+      ECR_POC_REPO: sketchydraw-poc
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::296062560614:role/github-actions-ecr-role
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # 🔧 Safe AI Backend Build
+      - name: Build AI Backend Docker image
+        run: |
+          docker build -t $ECR_BACKEND_REPO ./app/backend
+          docker tag $ECR_BACKEND_REPO:latest ${{ steps.login-ecr.outputs.registry }}/$ECR_BACKEND_REPO:latest
+
+      - name: Push AI Backend Docker image
+        run: |
+          docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_BACKEND_REPO:latest
+
+      # ☠️ PoC Exploit Image Build (for CVE-2025-23266 demo)
+      - name: Build PoC Docker image
+        run: |
+          docker build -t $ECR_POC_REPO ./app/attack
+          docker tag $ECR_POC_REPO:latest ${{ steps.login-ecr.outputs.registry }}/$ECR_POC_REPO:latest
+
+      - name: Push PoC Docker image
+        run: |
+          docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_POC_REPO:latest
+

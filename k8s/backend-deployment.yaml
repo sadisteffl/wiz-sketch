@@ -1,31 +1,40 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: backend-deployment
+  name: sketchydraw-backend
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: backend
+      app: sketchydraw-backend
   template:
     metadata:
       labels:
-        app: backend
+        app: sketchydraw-backend
     spec:
       serviceAccountName: sa-sketchydraw
       containers:
-      - name: backend
-        image: 296062560614.dkr.ecr.us-east-1.amazonaws.com/sketchy-backend-app:latest
-        ports:
-        - containerPort: 5000
-        volumeMounts:
-        - name: secrets-store-inline
-          mountPath: "/mnt/secrets-store"
-          readOnly: true
+        - name: backend
+          image: 96062560614.dkr.ecr.us-east-1.amazonaws.com/sketchy-backend-app:latest
+          volumeMounts:
+            - name: secrets-store-inline
+              mountPath: "/mnt/secrets-store"
+              readOnly: true
+          env:
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: sketchydraw-backend
+                  key: DB_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: sketchydraw-backend
+                  key: DB_PASSWORD
       volumes:
-      - name: secrets-store-inline
-        csi:
-          driver: secrets-store.csi.k8s.io
-          readOnly: true
-          volumeAttributes:
-            secretProviderClass: "sketchydraw-aws-secrets"
+        - name: secrets-store-inline
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: "sketchydraw-aws-secrets"

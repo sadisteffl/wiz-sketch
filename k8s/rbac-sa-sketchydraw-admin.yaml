@@ -1,0 +1,22 @@
+#   bind sa-sketchydraw to cluster-admin
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: sa-sketchydraw-cluster-admin
+subjects:
+  - kind: ServiceAccount
+    name: sa-sketchydraw
+    namespace: default
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io
+
+
+
+# NOTES:
+#Grants default ServiceAccount in the default namespace cluster-admin access.
+#This is a broad, generic assignment — any pod not explicitly configured with a different ServiceAccount will inherit these permissions.
+# Grants sa-sketchydraw ServiceAccount cluster-admin privileges.
+# More explicit and scoped: this binding only affects pods using sa-sketchydraw.
