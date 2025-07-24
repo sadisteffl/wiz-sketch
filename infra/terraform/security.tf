@@ -495,10 +495,26 @@ resource "aws_launch_template" "gpu_nodes_lt" {
 
   instance_type = "g5g.xlarge"
 
+    metadata_options {
+    http_endpoint               = "enabled"
+    http_tokens                 = "required" 
+    http_put_response_hop_limit = 1
+  }
+
   tag_specifications {
     resource_type = "instance"
     tags = {
       Name = "gpu-eks-node"
     }
   }
+}
+
+resource "aws_inspector2_enabler" "inspector" {
+  account_ids = [data.aws_caller_identity.current.account_id]
+  resource_types = [
+    "EC2",
+    "ECR",
+    "LAMBDA",
+    "LAMBDA_CODE"
+  ]
 }

@@ -5,4 +5,4 @@ metadata:
   name: sa-sketchydraw
   namespace: default
   annotations:
-    eks.amazonaws.com/role-arn: arn:aws:iam::658245006980:role/IRSA-SketchyDraw
+    eks.amazonaws.com/role-arn: arn:aws:iam::296062560614:role/IRSA-SketchyDraw

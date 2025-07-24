@@ -1,7 +1,7 @@
 # scan this with CI image scanner
 
 resource "aws_instance" "db_server" {
-  ami                    = "ami-0747bdcabd34c712a"
+  ami                    = "ami-020cba7c55df1f615"
   instance_type          = var.instance_type
   subnet_id              = aws_subnet.public_az1.id
   vpc_security_group_ids = [aws_security_group.db_vm.id]
@@ -13,8 +13,8 @@ resource "aws_instance" "db_server" {
   user_data = templatefile("${path.module}/user_data.sh", {
     db_user                = var.db_user
     s3_bucket_name         = aws_s3_bucket.mongodb-backup.bucket
-    mongo_admin_secret_arn = aws_secretsmanager_secret.mongo_secret.arn
-    mongo_user_secret_arn  = aws_secretsmanager_secret.mongo_secret.arn
+    mongo_admin_secret_arn = aws_secretsmanager_secret.mongo_manager.arn
+    mongo_user_secret_arn  = aws_secretsmanager_secret.mongo_manager.arn
   })
 
   metadata_options {
@@ -41,15 +41,15 @@ resource "random_password" "mongo_admin_password" {
   override_special = "!#$%&*()-_=+[]{}<>:?"
 }
 
-resource "aws_secretsmanager_secret" "mongo_secret_manager" {
-  name = "mongodb/admin-pass"
+resource "aws_secretsmanager_secret" "mongo_manager" {
+  name = "mongodb-manager/admin-pass"
   tags = {
     Description = "MongoDB admin password"
   }
 }
 
 resource "aws_secretsmanager_secret_version" "mongo_secret_manager_version" {
-  secret_id     = aws_secretsmanager_secret.mongo_secret_manager.id
+  secret_id     = aws_secretsmanager_secret.mongo_manager.id
   secret_string = random_password.mongo_admin_password.result
 }
 
@@ -61,15 +61,15 @@ resource "random_password" "mongo_user_password" {
   override_special = "!#$%&*()-_=+[]{}<>:?"
 }
 
-resource "aws_secretsmanager_secret" "mongo_secret" {
-  name = "mongo/sketchydb/user_password"
+resource "aws_secretsmanager_secret" "mongo_secrets" {
+  name = "mongo/sketch/user_password"
   tags = {
     Description = "MongoDB sketchydb application user password"
   }
 }
 
 resource "aws_secretsmanager_secret_version" "mongo_user_secret_version" {
-  secret_id     = aws_secretsmanager_secret.mongo_secret.id
+  secret_id     = aws_secretsmanager_secret.mongo_manager.id
   secret_string = random_password.mongo_user_password.result
 }
 
@@ -100,8 +100,8 @@ resource "aws_iam_role_policy" "mongo_permissions" {
         Effect = "Allow",
         Action = "secretsmanager:GetSecretValue",
         Resource = [
-          aws_secretsmanager_secret.mongo_secret_manager.arn,
-          aws_secretsmanager_secret.mongo_secret.arn
+          aws_secretsmanager_secret.mongo_secrets.arn,
+          aws_secretsmanager_secret.mongo_secrets.arn
         ]
       },
       {
