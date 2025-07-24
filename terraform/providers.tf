@@ -8,14 +8,13 @@ data "aws_availability_zones" "available" {}
 
 data "aws_partition" "current" {}
 
-data "aws_eks_cluster" "main" {
-  name = aws_eks_cluster.main.name
+data "aws_eks_cluster" "sketch-ai-cluster" {
+  name = aws_eks_cluster.sketch-ai-cluster.name
 }
 
-data "aws_eks_cluster_auth" "main" {
-  name = aws_eks_cluster.main.name
+data "aws_eks_cluster_auth" "sketch-ai-cluster" {
+  name = aws_eks_cluster.sketch-ai-cluster.name
 }
-
 data "aws_iam_policy_document" "sns_topic_policy" {
   statement {
     effect  = "Allow"
