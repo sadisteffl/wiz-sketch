@@ -1,130 +1,48 @@
 from flask import Flask, request, jsonify
+import torch
+from torchvision import transforms
 from PIL import Image
 import base64
 import io
-import os
-import random
 from pymongo import MongoClient
-from collections import defaultdict
 
 app = Flask(__name__)
 
-# --- Database Connection ---
-client = MongoClient(os.environ.get("DB_URI"))
-db = client.sketchydb
+# MongoDB setup
+client = MongoClient("mongodb://<db_user>:<db_password>@<vm_public_ip>:27017/")
+db = client["pictionary"]
+collection = db["leaderboard"]
 
-# --- Game Logic ---
-# Expanded list of prompts focusing on Medium and Hard difficulties
-PROMPTS = [
-    # Medium
-    "tree", "flower", "house", "car", "boat", "fish", "key", "star",
-    "sun", "cloud", "bridge", "moon", "hat", "door", "cup",
-    # Hard
-    "bicycle", "computer", "guitar", "camera", "airplane", "spider",
-    "octopus", "helicopter", "keyboard", "microscope", "satellite", "train"
+# List of drawable items
+CLASSES = [
+    "cat", "dog", "car", "house", "tree", "bicycle", "airplane", "flower", "guitar", "chair",
+    "horse", "boat", "train", "clock", "fish", "banana", "apple", "sun", "moon", "star"
 ]
-LEADERBOARD_FILE = "wizexercise.txt"
 
-def get_leaderboard():
-    """Reads scores from the leaderboard file."""
-    if not os.path.exists(LEADERBOARD_FILE):
-        return []
-    
-    scores = defaultdict(int)
-    with open(LEADERBOARD_FILE, "r") as f:
-        for line in f:
-            parts = line.strip().split(":")
-            if len(parts) == 2:
-                username, score = parts
-                scores[username] = int(score)
-    
-    # Sort scores descending and take the top 10
-    sorted_scores = sorted(scores.items(), key=lambda item: item[1], reverse=True)[:10]
-    return [{"username": u, "score": s} for u, s in sorted_scores]
-
-def update_leaderboard(username):
-    """Adds one point for the given username."""
-    scores = defaultdict(int)
-    if os.path.exists(LEADERBOARD_FILE):
-        with open(LEADERBOARD_FILE, "r") as f:
-            for line in f:
-                parts = line.strip().split(":")
-                if len(parts) == 2:
-                    user, score = parts
-                    scores[user] = int(score)
-    
-    scores[username] += 1
-    
-    with open(LEADERBOARD_FILE, "w") as f:
-        for user, score in scores.items():
-            f.write(f"{user}:{score}\n")
-
-def mock_ai_guesser(image_data):
-    """
-    Expanded Mock AI: Guesses from the prompt list based on drawing complexity.
-    This makes the demo more fun and believable.
-    """
-    try:
-        image = Image.open(io.BytesIO(base64.b64decode(image_data)))
-        grayscale_image = image.convert('L')
-        pixels = list(grayscale_image.getdata())
-        ink_pixel_count = sum(1 for pixel in pixels if pixel < 250)
-        
-        # Guess based on the amount of "ink" used, focusing on more complex items
-        if ink_pixel_count < 4000: return random.choice(["sun", "cloud", "star", "moon"])
-        elif ink_pixel_count < 8000: return random.choice(["tree", "flower", "fish", "cup"])
-        elif ink_pixel_count < 12000: return random.choice(["house", "car", "boat", "key", "door"])
-        elif ink_pixel_count < 18000: return random.choice(["bridge", "hat", "guitar", "camera"])
-        elif ink_pixel_count < 25000: return random.choice(["spider", "octopus", "bicycle", "train"])
-        else: return random.choice(["computer", "airplane", "helicopter", "microscope", "satellite"])
-
-    except Exception as e:
-        print(f"Error in AI guesser: {e}")
-        return "something mysterious ✨"
-
-# --- API Routes ---
-@app.route("/api/prompt", methods=["GET"])
-def get_prompt():
-    """Returns a random drawing prompt."""
-    return jsonify({"prompt": random.choice(PROMPTS)})
-
-@app.route("/api/leaderboard", methods=["GET"])
-def leaderboard():
-    """Returns the current leaderboard."""
-    return jsonify({"scores": get_leaderboard()})
-
-@app.route("/api/classify", methods=["POST"])
+@app.route("/classify", methods=["POST"])
 def classify():
-    """Receives an image, username, and prompt, returns a guess and correctness."""
-    try:
-        data = request.json
-        image_data = data.get("image")
-        username = data.get("username")
-        prompt = data.get("prompt")
+    username = request.json.get("username")
+    data = request.json.get("image")
+    image = Image.open(io.BytesIO(base64.b64decode(data)))
 
-        if not all([image_data, username, prompt]):
-            return jsonify({"error": "Missing image, username, or prompt"}), 400
+    transform = transforms.Compose([
+        transforms.Resize((224, 224)),
+        transforms.ToTensor()
+    ])
+    tensor = transform(image).unsqueeze(0)
 
-        prediction = mock_ai_guesser(image_data)
-        # Check if the prediction is in the same category or is the exact prompt
-        is_correct = (prediction == prompt)
+    # Simulated prediction
+    prediction = CLASSES[int(torch.randint(0, len(CLASSES), (1,)).item())]
 
-        if is_correct:
-            update_leaderboard(username)
+    if username:
+        collection.update_one({"username": username}, {"$inc": {"score": 1}}, upsert=True)
 
-        # Log the attempt to MongoDB
-        db.predictions.insert_one({
-            "username": username,
-            "prompt": prompt,
-            "prediction": prediction,
-            "is_correct": is_correct
-        })
-        
-        return jsonify({"prediction": prediction, "is_correct": is_correct})
+    return jsonify({"prediction": prediction})
 
-    except Exception as e:
-        print(f"Error in /api/classify: {e}")
-        return jsonify({"error": "An internal error occurred"}), 500
+@app.route("/leaderboard", methods=["GET"])
+def leaderboard():
+    results = collection.find().sort("score", -1)
+    return jsonify([{"username": doc["username"], "score": doc["score"]} for doc in results])
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
