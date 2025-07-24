@@ -84,6 +84,11 @@ resource "aws_eks_node_group" "sketch_nodes" {
     aws_subnet.public_az2.id
   ]
 
+   launch_template {
+    id      = aws_launch_template.gpu_nodes_lt.id
+    version = "$Latest"
+  }
+
   instance_types = ["t3.medium"]
 
   scaling_config {
