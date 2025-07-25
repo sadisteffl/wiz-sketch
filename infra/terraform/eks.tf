@@ -33,6 +33,9 @@ resource "aws_eks_cluster" "sketch-ai-cluster" {
     ]
   }
 
+  endpoint_public_access  = false
+  endpoint_private_access = true
+
   enabled_cluster_log_types = [
     "api",
     "audit",
