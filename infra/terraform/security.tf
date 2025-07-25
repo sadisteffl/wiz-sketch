@@ -77,11 +77,13 @@ resource "aws_kms_key_policy" "general_service_key_policy" {
 }
 
 data "aws_iam_policy_document" "general_service_key_policy" {
+  # Statement 1: Grants administrative access to the key for the root user/role executing Terraform.
+  # This is restricted to only this specific key, removing the wildcard.
   statement {
     sid       = "EnableIAMUserPermissions"
     effect    = "Allow"
     actions   = ["kms:*"]
-    resources = ["*"] # This should be scoped to the key ARN for best practice
+    resources = [aws_kms_key.general_service_key.arn]
     principals {
       type = "AWS"
       identifiers = [
@@ -90,17 +92,47 @@ data "aws_iam_policy_document" "general_service_key_policy" {
       ]
     }
   }
+
+  # Statement 2: Allows CloudWatch Logs to encrypt and decrypt logs using this key.
   statement {
     sid       = "AllowCloudWatchLogsService"
     effect    = "Allow"
     actions   = ["kms:Encrypt*", "kms:Decrypt*", "kms:ReEncrypt*", "kms:GenerateDataKey*", "kms:Describe*"]
-    resources = ["*"] # This should be scoped to the key ARN for best practice
+    resources = [aws_kms_key.general_service_key.arn]
     principals {
       type        = "Service"
       identifiers = ["logs.${data.aws_region.current.name}.amazonaws.com"]
     }
   }
+
+  # Statement 3: Allows SNS to encrypt and decrypt notifications for the topics using this key.
+  statement {
+    sid    = "AllowSNSService"
+    effect = "Allow"
+    actions = [
+      "kms:GenerateDataKey*",
+      "kms:Decrypt"
+    ]
+    resources = [aws_kms_key.general_service_key.arn]
+    principals {
+      type        = "Service"
+      identifiers = ["sns.amazonaws.com"]
+    }
+  }
+
+  # Statement 4: Allows the MongoDB EC2 instance role to decrypt the database credentials from Secrets Manager.
+  statement {
+    sid       = "AllowMongoVMToDecryptSecret"
+    effect    = "Allow"
+    actions   = ["kms:Decrypt"]
+    resources = [aws_kms_key.general_service_key.arn]
+    principals {
+      type        = "AWS"
+      identifiers = [aws_iam_role.mongo_instance_role.arn]
+    }
+  }
 }
+
 
 data "aws_guardduty_detector" "this" {}
 
@@ -517,4 +549,80 @@ resource "aws_inspector2_enabler" "inspector" {
     "LAMBDA",
     "LAMBDA_CODE"
   ]
+}
+
+resource "aws_s3_bucket" "config_bucket" {
+  bucket = "aws-config-bucket-${data.aws_caller_identity.current.account_id}"
+
+  # Prevents the bucket from being accidentally deleted.
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
+resource "aws_s3_bucket_policy" "config_bucket_policy" {
+  bucket = aws_s3_bucket.config_bucket.id
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Sid    = "AWSConfigBucketPermissionsCheck",
+        Effect = "Allow",
+        Principal = {
+          Service = "config.amazonaws.com"
+        },
+        Action   = "s3:GetBucketAcl",
+        Resource = aws_s3_bucket.config_bucket.arn
+      },
+      {
+        Sid    = "AWSConfigBucketDelivery",
+        Effect = "Allow",
+        Principal = {
+          Service = "config.amazonaws.com"
+        },
+        Action   = "s3:PutObject",
+        Resource = "${aws_s3_bucket.config_bucket.arn}/*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role" "config_role" {
+  name = "aws-config-service-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Principal = {
+          Service = "config.amazonaws.com"
+        },
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "config_role_attachment" {
+  role       = aws_iam_role.config_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWS_ConfigRole"
+}
+
+resource "aws_config_configuration_recorder" "main" {
+  name     = "default"
+  role_arn = aws_iam_role.config_role.arn
+
+  # This section tells Config to record all supported resource types.
+  recording_group {
+    all_supported                 = true
+    include_global_resource_types = true
+  }
+}
+
+resource "aws_config_delivery_channel" "main" {
+  name           = "config_channel"
+  s3_bucket_name = aws_s3_bucket.config_bucket.bucket
+
+  depends_on = [aws_config_configuration_recorder.main]
 }

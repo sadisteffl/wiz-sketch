@@ -109,7 +109,7 @@ resource "aws_iam_policy" "eks_secrets_decrypt" {
 
 # 2. Attach the policy to the EKS worker node role
 resource "aws_iam_role_policy_attachment" "eks_node_secrets_decrypt_attachment" {
-  role       = aws_iam_role.eks_node_group_role.name
+  role       = aws_iam_role.eks_node_role.name
   policy_arn = aws_iam_policy.eks_secrets_decrypt.arn
 }
 

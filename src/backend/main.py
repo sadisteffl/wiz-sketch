@@ -1,3 +1,5 @@
+from flask import Flask, jsonify, request
+from flask_cors import CORS 
 from flask import Flask, request, jsonify
 import torch
 from torchvision import transforms
@@ -8,12 +10,12 @@ from pymongo import MongoClient
 
 app = Flask(__name__)
 
-# MongoDB setup
+
 client = MongoClient("mongodb://<db_user>:<db_password>@<vm_public_ip>:27017/")
 db = client["pictionary"]
 collection = db["leaderboard"]
 
-# List of drawable items
+
 CLASSES = [
     "cat", "dog", "car", "house", "tree", "bicycle", "airplane", "flower", "guitar", "chair",
     "horse", "boat", "train", "clock", "fish", "banana", "apple", "sun", "moon", "star"
