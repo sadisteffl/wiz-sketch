@@ -1,4 +1,3 @@
-# scan this with CI image scanner
 
 resource "aws_instance" "db_server" {
   ami                    = "ami-020cba7c55df1f615"
@@ -42,7 +41,8 @@ resource "random_password" "mongo_admin_password" {
 }
 
 resource "aws_secretsmanager_secret" "mongo_manager" {
-  name = "mongodb-manager"
+  name       = "mongodb-manager"
+  kms_key_id = aws_kms_key.secrets_key.arn
   tags = {
     Description = "MongoDB admin password"
   }
@@ -62,7 +62,8 @@ resource "random_password" "mongo_user_password" {
 }
 
 resource "aws_secretsmanager_secret" "mongo_secrets" {
-  name = "mongo/user"
+  name       = "mongo/user"
+  kms_key_id = aws_kms_key.secrets_key.arn
   tags = {
     Description = "MongoDB sketchydb application user password"
   }

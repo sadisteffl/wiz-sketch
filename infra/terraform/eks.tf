@@ -21,6 +21,25 @@ resource "aws_iam_role_policy_attachment" "eks_service_policy" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSServicePolicy"
 }
 
+resource "aws_kms_key" "eks_secrets_key" {
+  description = "KMS key for EKS secret encryption"
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions",
+        Effect = "Allow",
+        Principal = {
+          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        },
+        Action   = "kms:*",
+        Resource = "*"
+      }
+    ]
+  })
+}
+
 resource "aws_eks_cluster" "sketch-ai-cluster" {
   name     = "sketch-ai-cluster"
   role_arn = aws_iam_role.eks_cluster_role.arn
@@ -31,10 +50,16 @@ resource "aws_eks_cluster" "sketch-ai-cluster" {
       aws_subnet.public_az1.id,
       aws_subnet.public_az2.id
     ]
+    endpoint_public_access  = false
+    endpoint_private_access = true
   }
 
-  endpoint_public_access  = false
-  endpoint_private_access = true
+  encryption_config {
+    resources = ["secrets"]
+    provider {
+      key_arn = aws_kms_key.eks_secrets_key.arn
+    }
+  }
 
   enabled_cluster_log_types = [
     "api",
@@ -61,6 +86,31 @@ resource "aws_iam_role" "eks_node_role" {
       Action    = "sts:AssumeRole"
     }]
   })
+}
+
+# iam.tf
+
+# 1. Create a policy to allow decryption using the EKS secrets key
+resource "aws_iam_policy" "eks_secrets_decrypt" {
+  name        = "eks-secrets-decrypt-policy"
+  description = "Allows EKS worker nodes to decrypt secrets encrypted with the cluster KMS key"
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect   = "Allow",
+        Action   = "kms:Decrypt",
+        Resource = aws_kms_key.eks_secrets_key.arn
+      }
+    ]
+  })
+}
+
+# 2. Attach the policy to the EKS worker node role
+resource "aws_iam_role_policy_attachment" "eks_node_secrets_decrypt_attachment" {
+  role       = aws_iam_role.eks_node_group_role.name
+  policy_arn = aws_iam_policy.eks_secrets_decrypt.arn
 }
 
 resource "aws_iam_role_policy_attachment" "eks_worker_node_policy" {
