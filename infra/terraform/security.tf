@@ -495,9 +495,9 @@ resource "aws_launch_template" "gpu_nodes_lt" {
 
   instance_type = "g5g.xlarge"
 
-    metadata_options {
+  metadata_options {
     http_endpoint               = "enabled"
-    http_tokens                 = "required" 
+    http_tokens                 = "required"
     http_put_response_hop_limit = 1
   }
 
