@@ -8,17 +8,15 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read 
-  security-events: write 
+  contents: read  
+  security-events: write  
 
 jobs:
-  # Job to scan a container image for vulnerabilities and generate an SBOM
   trivy_image_scan:
     name: Trivy Image Scan
     runs-on: ubuntu-latest
     
     steps:
-      # Step 1: Check out the repository code
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -74,13 +72,15 @@ jobs:
       - name: Run Trivy IaC scanner
         uses: aquasecurity/trivy-action@master
         with:
-          scan-type: 'iac'
+          # --- THIS SECTION HAS BEEN CORRECTED ---
+          scan-type: 'config' # Changed from 'iac'
           scan-ref: '.'
           format: 'sarif'
           output: 'trivy-iac-results.sarif'
           severity: 'HIGH,CRITICAL'
           exit-code: '0'
-          iac-scanners: 'terraform'
+          # 'iac-scanners' is no longer needed with the 'config' scan type
+          # iac-scanners: 'terraform' 
 
       # Step 3: Upload IaC scan results to GitHub Security tab
       - name: Upload Trivy IaC scan results to GitHub Security
@@ -143,7 +143,7 @@ jobs:
           format: 'table'
           output: 'license-results.txt'
           # You can specify which license types to fail on, e.g., 'GPL,AGPL'
-          # ignored-licenses: 'MIT,Apache-2.0' 
+          # ignored-licenses: 'MIT,Apache-2.0'  
           license-full: true
 
       # Step 7: Upload license report as an artifact
