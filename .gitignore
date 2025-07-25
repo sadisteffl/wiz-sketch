@@ -1,6 +1,4 @@
-# Terraform Core Files
-# These should be ignored to avoid versioning local configurations,
-# state files, and secrets.
+
 .terraform/
 *.tfstate
 *.tfstate.*
@@ -10,27 +8,23 @@ crash.*.log
 terraform.rc
 .terraformrc
 
-# Terraform Variable Files
-# It's a best practice to ignore .tfvars files as they may contain secrets.
-# Commit a .tfvars.example file instead.
+
 *.tfvars
 *.tfvars.json
 
-# Terraform Override Files
+
 override.tf
 override.tf.json
 *_override.tf
 *_override.tf.json
 
-# Python
-# Standard ignores for Python projects.
+
 __pycache__/
 *.pyc
 venv/
 .venv/
 *.env
 
-# Helm
-# Ignores local Helm directories and packaged charts.
+
 helm/
 *.tgz

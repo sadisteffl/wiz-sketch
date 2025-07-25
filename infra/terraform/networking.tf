@@ -1,5 +1,10 @@
-# --- Networking Resources ---
 
+# Gets the available availability zones in the region
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+# Creates the main Virtual Private Cloud (VPC)
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
   tags = {
@@ -56,7 +61,6 @@ resource "aws_route_table_association" "public_az2" {
   subnet_id      = aws_subnet.public_az2.id
   route_table_id = aws_route_table.public.id
 }
-
 
 resource "aws_security_group" "k8s_cluster" {
   name        = "k8s-cluster-sg"

@@ -1,7 +1,6 @@
 `gcc -fPIC -shared -o poc.so poc.c
 `
 
-
 Intall the gpu operator: 
 helm repo add nvidia https://nvidia.github.io/gpu-operator
 helm repo update

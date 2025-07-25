@@ -1,13 +1,14 @@
-# k8s/backend-service.yaml (example snippet)
 apiVersion: v1
 kind: Service
 metadata:
   name: backend-service
 spec:
-  selector:
-    app: backend 
+  type: LoadBalancer
   ports:
-    - protocol: TCP
-      port: 80 
-      targetPort: 5000 
-  type: ClusterIP 
+  - port: 80
+    # This should match your backend container's port
+    targetPort: 5000
+    protocol: TCP
+  selector:
+    # This must match the label of your backend pods
+    app: sketchydraw-backend

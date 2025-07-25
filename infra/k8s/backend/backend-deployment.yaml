@@ -12,6 +12,8 @@ spec:
       labels:
         app: sketchydraw-backend
     spec:
+      # The serviceAccountName is no longer strictly needed for this test,
+      # but leaving it is harmless.
       serviceAccountName: sa-sketchydraw
       containers:
         - name: backend
@@ -19,20 +21,8 @@ spec:
           ports:
             - containerPort: 5000
           env:
-            # CORRECTED: This now loads the full database URI from the correct secret
+            # --- IMPORTANT ---
+            # Replace the placeholder value below with your actual database connection string.
             - name: DB_URI
-              valueFrom:
-                secretKeyRef:
-                  name: sketchydraw-db-uri # Use the k8s secret created by the CSI driver
-                  key: DB_URI
-          volumeMounts:
-            - name: secrets-store-inline
-              mountPath: "/mnt/secrets-store"
-              readOnly: true
-      volumes:
-        - name: secrets-store-inline
-          csi:
-            driver: secrets-store.csi.k8s.io
-            readOnly: true
-            volumeAttributes:
-              secretProviderClass: "sketchydraw-aws-secrets"
+              value: "postgresql://user:password@host:port/dbname"
+      # NOTE: The 'volumes' and 'volumeMounts' for the CSI driver have been removed for this test.

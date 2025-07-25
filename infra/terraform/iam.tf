@@ -30,14 +30,17 @@ resource "aws_iam_openid_connect_provider" "eks" {
 
 resource "aws_iam_policy" "secretsmanager_access" {
   name        = "SecretsManagerSketchyDrawAccess"
-  description = "Allows pod to read secrets from AWS Secrets Manager"
+  description = "Allows access to the SketchyDraw secret in Secrets Manager"
+
   policy = jsonencode({
     Version = "2012-10-17",
-    Statement = [{
-      Effect   = "Allow",
-      Action   = ["secretsmanager:GetSecretValue"],
-      Resource = "arn:aws:secretsmanager:*:*:secret:sketchydraw/backend*"
-    }]
+    Statement = [
+      {
+        Effect   = "Allow",
+        Action   = "secretsmanager:GetSecretValue",
+        Resource = "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:sketchydraw/backend-*"
+      },
+    ]
   })
 }
 

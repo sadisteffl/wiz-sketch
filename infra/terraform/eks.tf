@@ -99,3 +99,28 @@ resource "aws_eks_node_group" "sketch_nodes" {
     Name = "Free Tier Node Group"
   }
 }
+
+data "aws_iam_policy_document" "csi_driver_trust_policy" {
+  statement {
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+    effect  = "Allow"
+
+    principals {
+      type        = "Federated"
+      identifiers = [aws_iam_openid_connect_provider.eks.arn]
+    }
+
+    # This condition trusts the service account used by the CSI driver pods
+    condition {
+      test     = "StringEquals"
+      variable = "${replace(aws_iam_openid_connect_provider.eks.url, "https://", "")}:sub"
+      values   = ["system:serviceaccount:kube-system:csi-secrets-store-provider-aws"]
+    }
+  }
+}
+
+# Attach the ECR Read-Only policy to the EKS node role
+resource "aws_iam_role_policy_attachment" "ecr_read_only_for_nodes" {
+  role       = aws_iam_role.eks_node_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+}

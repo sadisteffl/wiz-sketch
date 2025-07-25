@@ -42,7 +42,7 @@ resource "random_password" "mongo_admin_password" {
 }
 
 resource "aws_secretsmanager_secret" "mongo_manager" {
-  name = "mongodb-manager/admin-pass"
+  name = "mongodb-manager"
   tags = {
     Description = "MongoDB admin password"
   }
@@ -62,7 +62,7 @@ resource "random_password" "mongo_user_password" {
 }
 
 resource "aws_secretsmanager_secret" "mongo_secrets" {
-  name = "mongo/sketch/user_password"
+  name = "mongo/user"
   tags = {
     Description = "MongoDB sketchydb application user password"
   }
