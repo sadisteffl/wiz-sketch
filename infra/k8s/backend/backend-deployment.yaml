@@ -15,22 +15,20 @@ spec:
       serviceAccountName: sa-sketchydraw
       containers:
         - name: backend
-          image: 96062560614.dkr.ecr.us-east-1.amazonaws.com/sketchy-backend-app:latest
+          image: 296062560614.dkr.ecr.us-east-1.amazonaws.com/sketchy-backend-app:latest
+          ports:
+            - containerPort: 5000
+          env:
+            # CORRECTED: This now loads the full database URI from the correct secret
+            - name: DB_URI
+              valueFrom:
+                secretKeyRef:
+                  name: sketchydraw-db-uri # Use the k8s secret created by the CSI driver
+                  key: DB_URI
           volumeMounts:
             - name: secrets-store-inline
               mountPath: "/mnt/secrets-store"
               readOnly: true
-          env:
-            - name: DB_USER
-              valueFrom:
-                secretKeyRef:
-                  name: sketchydraw-backend
-                  key: DB_USER
-            - name: DB_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: sketchydraw-backend
-                  key: DB_PASSWORD
       volumes:
         - name: secrets-store-inline
           csi:

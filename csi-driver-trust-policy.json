@@ -1,0 +1,18 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "Federated": "arn:aws:iam::296062560614:oidc-provider/oidc.eks.us-east-1.amazonaws.com/id/F29B2548"
+            },
+            "Action": "sts:AssumeRoleWithWebIdentity",
+            "Condition": {
+                "StringEquals": {
+                    "oidc.eks.us-east-1.amazonaws.com/id/F29B2548:sub": "system:serviceaccount:kube-system:secrets-store-csi-driver",
+                    "oidc.eks.us-east-1.amazonaws.com/id/F29B2548:aud": "sts.amazonaws.com"
+                }
+            }
+        }
+    ]
+}
