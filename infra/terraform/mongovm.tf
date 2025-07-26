@@ -69,7 +69,7 @@ resource "aws_secretsmanager_secret" "mongo_secrets" {
 }
 
 resource "aws_secretsmanager_secret_version" "mongo_user_secret_version" {
-  secret_id     = aws_secretsmanager_secret.mongo_manager.id
+  secret_id     = aws_secretsmanager_secret.mongo_secrets.id
   secret_string = random_password.mongo_user_password.result
 }
 
