@@ -53,7 +53,6 @@ resource "aws_instance" "bastion_host" {
   key_name               = "eks-bastion-key"
   vpc_security_group_ids = [aws_security_group.bastion_sg.id]
 
-  # This script runs on first boot to install kubectl and other tools
   user_data = <<-EOF
               #!/bin/bash
               # Update packages and install AWS CLI v2
