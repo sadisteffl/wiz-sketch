@@ -1,10 +1,9 @@
+# networking.tf
 
-# Gets the available availability zones in the region
 data "aws_availability_zones" "available" {
   state = "available"
 }
 
-# Creates the main Virtual Private Cloud (VPC)
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
   tags = {
@@ -64,12 +63,23 @@ resource "aws_route_table_association" "public_az2" {
 
 resource "aws_security_group" "k8s_cluster" {
   name        = "k8s-cluster-sg"
-  description = "Security group for K8s worker nodes"
+  # This description is reverted back to the original to prevent replacement
+  description = "Security group for K8s worker nodes" 
   vpc_id      = aws_vpc.main.id
 
   tags = {
     Name = "wiz-exercise-k8s-sg"
   }
+}
+
+resource "aws_security_group_rule" "allow_bastion_to_eks" {
+  type                     = "ingress"
+  from_port                = 443 # K8s API server port
+  to_port                  = 443
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.k8s_cluster.id
+  source_security_group_id = aws_security_group.bastion_sg.id
+  description              = "Allow kubectl from bastion to EKS control plane"
 }
 
 resource "aws_security_group" "db_vm" {

@@ -22,7 +22,9 @@ resource "aws_iam_role_policy_attachment" "eks_service_policy" {
 }
 
 resource "aws_kms_key" "eks_secrets_key" {
-  description = "KMS key for EKS secret encryption"
+  description             = "KMS key for EKS secret encryption"
+  enable_key_rotation     = true
+  deletion_window_in_days = 7
 
   policy = jsonencode({
     Version = "2012-10-17",

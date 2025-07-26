@@ -42,3 +42,6 @@ output "waf_acl_arn" {
   value       = aws_wafv2_web_acl.sketchy_waf.arn
 }
 
+output "bastion_ssh_command" {
+  value = "ssh -i 'eks-bastion-key.pem' ec2-user@${aws_instance.bastion_host.public_dns}"
+}
