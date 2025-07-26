@@ -1,16 +1,17 @@
-# Local .terraform directories
-**/.terraform/*
 
-
+.terraform/
 *.tfstate
-*.tfstate.*.backup
-
+*.tfstate.*
+*.tfplan
 crash.log
 crash.*.log
+terraform.rc
+.terraformrc
 
 
 *.tfvars
 *.tfvars.json
+
 
 override.tf
 override.tf.json
@@ -18,9 +19,12 @@ override.tf.json
 *_override.tf.json
 
 
-*.tfplan
+__pycache__/
+*.pyc
+venv/
+.venv/
+*.env
 
-.terraformrc
-terraform.rc
 
-.terraform/providers
+helm/
+*.tgz
