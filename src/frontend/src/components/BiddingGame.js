@@ -3,7 +3,6 @@ import axios from "axios";
 
 // Enhanced styles for a game show look and feel
 const styles = {
-    // ... (All the styling from the previous response remains the same)
     container: {
         display: 'flex',
         flexDirection: 'column',
@@ -63,4 +62,19 @@ const styles = {
         cursor: 'pointer',
         color: 'white',
         fontWeight: 'bold',
-        transition: 'transform
+        transition: 'transform 0.2s ease-in-out' // Corrected this line
+    }
+};
+
+// This is a placeholder for the actual BiddingGame component logic
+const BiddingGame = () => {
+    // You can add your game logic here
+    return (
+        <div style={styles.container}>
+            <h1 style={styles.header}>The Price is Right!</h1>
+            {/* Your game elements will go here */}
+        </div>
+    );
+};
+
+export default BiddingGame;

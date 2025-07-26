@@ -10,7 +10,7 @@ app = Flask(__name__)
 # It's better to get the connection string from an environment variable
 db_uri = os.environ.get("DB_URI", "mongodb://localhost:27017/")
 client = MongoClient(db_uri)
-db = client["pictionary"] # You can rename this database if you like
+db = client["sketchydb"] 
 leaderboard_collection = db["leaderboard"]
 
 # --- Game Data ---
@@ -27,7 +27,7 @@ PRODUCTS = [
     {"id": 9, "name": "Yoga Mat", "price": 34.95, "image": "/images/yoga_mat.png"},
     {"id": 10, "name": "Sonos Era 100 Speaker", "price": 249.00, "image": "/images/sonos_speaker.png"},
     {"id": 11, "name": "Laundry Detergent (92 oz)", "price": 14.97, "image": "/images/laundry_detergent.png"},
-    {"id": 12, "name": "Wireless Optical Mouse", "price": 29.99, "image": "/images/mouse.png"}
+    {"id": 12, "name": "Wireless Optical Mouse", "price": 29.99, "image": "/images/mouse.png"},
     {"id": 13, "name": "Compact Travel Umbrella", "price": 24.99, "image": "/images/umbrella.png"}
 ]
 

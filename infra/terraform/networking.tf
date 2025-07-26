@@ -62,9 +62,9 @@ resource "aws_route_table_association" "public_az2" {
 }
 
 resource "aws_security_group" "k8s_cluster" {
-  name        = "k8s-cluster-sg"
+  name = "k8s-cluster-sg"
   # This description is reverted back to the original to prevent replacement
-  description = "Security group for K8s worker nodes" 
+  description = "Security group for K8s worker nodes"
   vpc_id      = aws_vpc.main.id
 
   tags = {
