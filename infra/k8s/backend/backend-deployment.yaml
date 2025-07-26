@@ -1,0 +1,29 @@
+# backend-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sketchydraw-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sketchydraw-backend
+  template:
+    metadata:
+      labels:
+        app: sketchydraw-backend
+    spec:
+      # The serviceAccountName is no longer strictly needed for this test,
+      # but leaving it is harmless.
+      serviceAccountName: sa-sketchydraw
+      containers:
+        - name: backend
+          image: 296062560614.dkr.ecr.us-east-1.amazonaws.com/sketchy-backend-app:latest
+          ports:
+            - containerPort: 5000
+          env:
+            # --- IMPORTANT ---
+            # Replace the placeholder value below with your actual database connection string.
+            - name: DB_URI
+              value: "postgresql://user:password@host:port/dbname"
+      # NOTE: The 'volumes' and 'volumeMounts' for the CSI driver have been removed for this test.

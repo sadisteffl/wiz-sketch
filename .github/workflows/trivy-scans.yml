@@ -1,0 +1,171 @@
+# .github/workflows/trivy-scans.yml
+name: Trivy Advanced Security Scans
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read  
+  security-events: write  
+
+jobs:
+  trivy_image_scan:
+    name: Trivy Image Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Run Trivy vulnerability scanner on a container image
+      # This step scans for vulnerabilities and outputs the results in SARIF format.
+      - name: Run Trivy vulnerability scanner (Image)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'image'
+          image-ref: 'node:18-alpine' # Example image, replace with your own
+          format: 'sarif'
+          output: 'trivy-image-results.sarif'
+          severity: 'HIGH,CRITICAL'
+          # We don't fail the build here; we let the Code Scanning UI handle the results
+          exit-code: '0'
+
+      # Step 3: Upload Trivy scan results to GitHub Security tab
+      # This action uploads the SARIF file generated in the previous step.
+      - name: Upload Trivy image scan results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-image-results.sarif'
+          category: 'trivy-image'
+
+      # Step 4: Generate SBOM for the container image
+      # An SBOM (Software Bill of Materials) is an inventory of all software components.
+      - name: Generate image SBOM
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'image'
+          image-ref: 'node:18-alpine' # Use the same image as the vulnerability scan
+          format: 'cyclonedx'
+          output: 'image-sbom.json'
+          
+      # Step 5: Upload SBOM as a workflow artifact
+      # This makes the SBOM available for download from the workflow run page.
+      - name: Upload Image SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: image-sbom
+          path: image-sbom.json
+
+  # Job to scan Infrastructure as Code (IaC) files
+  trivy_iac_scan:
+    name: Trivy IaC Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Run Trivy's IaC scanner and output to SARIF
+      - name: Run Trivy IaC scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          # --- THIS SECTION HAS BEEN CORRECTED ---
+          scan-type: 'config' # Changed from 'iac'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-iac-results.sarif'
+          severity: 'HIGH,CRITICAL'
+          exit-code: '0'
+          # 'iac-scanners' is no longer needed with the 'config' scan type
+          # iac-scanners: 'terraform' 
+
+      # Step 3: Upload IaC scan results to GitHub Security tab
+      - name: Upload Trivy IaC scan results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-iac-results.sarif'
+          category: 'trivy-iac'
+
+  # Job to scan the repository for vulnerabilities, secrets, and licenses
+  trivy_repo_scan:
+    name: Trivy Repo Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Scan filesystem for vulnerabilities
+      - name: Run Trivy filesystem vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-fs-results.sarif'
+          severity: 'HIGH,CRITICAL'
+          exit-code: '0'
+
+      # Step 3: Upload filesystem scan results to GitHub Security
+      - name: Upload Trivy filesystem scan results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-fs-results.sarif'
+          category: 'trivy-fs'
+
+      # Step 4: Scan for hardcoded secrets
+      - name: Run Trivy secret scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          scanners: 'secret'
+          format: 'sarif'
+          output: 'trivy-secret-results.sarif'
+          exit-code: '0'
+
+      # Step 5: Upload secret scan results to GitHub Security
+      - name: Upload Trivy secret scan results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-secret-results.sarif'
+          category: 'trivy-secret'
+
+      # Step 6: Scan for license compliance issues
+      - name: Run Trivy license scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'table'
+          output: 'license-results.txt'
+          # You can specify which license types to fail on, e.g., 'GPL,AGPL'
+          # ignored-licenses: 'MIT,Apache-2.0'  
+          license-full: true
+
+      # Step 7: Upload license report as an artifact
+      - name: Upload License Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: license-report
+          path: license-results.txt
+          
+      # Step 8: Generate SBOM for the filesystem
+      - name: Generate filesystem SBOM
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'cyclonedx'
+          output: 'fs-sbom.json'
+          
+      # Step 9: Upload SBOM as a workflow artifact
+      - name: Upload Filesystem SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: fs-sbom
+          path: fs-sbom.json

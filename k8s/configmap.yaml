@@ -1,8 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: app-config
-data: 
-  S3_BUCKET_NAME: "mongodb-backup-cd62980f"
-  
-  REACT_APP_BACKEND_URL: "http://backend-service:80"
