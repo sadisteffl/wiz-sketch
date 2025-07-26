@@ -7,6 +7,10 @@ metadata:
     kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
+    
+    # This annotation attaches your WAF
+    alb.ingress.kubernetes.io/web-acl-arn: "arn:aws:wafv2:us-east-1:296062560614:regional/webacl/sketchy_waf/d9bd5319-3be8-4116-8c02-89ecbc14cdd3" 
+
 spec:
   rules:
     - http:

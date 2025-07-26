@@ -1,4 +1,4 @@
-# infra/k8s/rbac/csi-driver-rbac.yaml
+# infra/k8s/network/csi-driver-rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:

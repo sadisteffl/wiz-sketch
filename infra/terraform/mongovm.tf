@@ -8,11 +8,12 @@ resource "aws_instance" "db_server" {
   monitoring             = true
   ebs_optimized          = true
 
+  # Securely pass the secret ARNs to the user_data script
   user_data = templatefile("${path.module}/user_data.sh", {
     db_user                = var.db_user
     s3_bucket_name         = aws_s3_bucket.mongodb-backup.bucket
     mongo_admin_secret_arn = aws_secretsmanager_secret.mongo_manager.arn
-    mongo_user_secret_arn  = aws_secretsmanager_secret.mongo_manager.arn
+    mongo_user_secret_arn  = aws_secretsmanager_secret.mongo_user_secret.arn
   })
 
   metadata_options {
@@ -32,7 +33,6 @@ resource "aws_instance" "db_server" {
 
 
 # Admin User
-
 resource "random_password" "mongo_admin_password" {
   length           = 16
   special          = true
@@ -40,7 +40,7 @@ resource "random_password" "mongo_admin_password" {
 }
 
 resource "aws_secretsmanager_secret" "mongo_manager" {
-  name       = "mongodb-manager"
+  name       = "mongodb/admin/password"
   kms_key_id = aws_kms_key.general_service_key.arn
   tags = {
     Description = "MongoDB admin password"
@@ -52,16 +52,16 @@ resource "aws_secretsmanager_secret_version" "mongo_secret_manager_version" {
   secret_string = random_password.mongo_admin_password.result
 }
 
-# Application User 
-
+# Application User
 resource "random_password" "mongo_user_password" {
   length           = 16
   special          = true
   override_special = "!#$%&*()-_=+[]{}<>:?"
 }
 
-resource "aws_secretsmanager_secret" "mongo_secrets" {
-  name       = "mongo/user"
+# This secret stores the app user's password for the user_data script to fetch
+resource "aws_secretsmanager_secret" "mongo_user_secret" {
+  name       = "mongodb/user/password"
   kms_key_id = aws_kms_key.general_service_key.arn
   tags = {
     Description = "MongoDB sketchydb application user password"
@@ -69,8 +69,25 @@ resource "aws_secretsmanager_secret" "mongo_secrets" {
 }
 
 resource "aws_secretsmanager_secret_version" "mongo_user_secret_version" {
-  secret_id     = aws_secretsmanager_secret.mongo_secrets.id
+  secret_id     = aws_secretsmanager_secret.mongo_user_secret.id
   secret_string = random_password.mongo_user_password.result
+}
+
+# This is the secret that will be used by Kubernetes (contains the full URI)
+resource "aws_secretsmanager_secret" "sketchy_backend_secret" {
+  # CHANGED: The secret name is now different to avoid conflicts.
+  name       = "sketchydraw_back"
+  kms_key_id = aws_kms_key.general_service_key.arn
+  tags = {
+    Description = "MongoDB connection URI for SketchyDraw backend"
+  }
+}
+
+resource "aws_secretsmanager_secret_version" "sketchy_backend_secret_version" {
+  secret_id = aws_secretsmanager_secret.sketchy_backend_secret.id
+  secret_string = jsonencode({
+    DB_URI = "mongodb://${var.db_user}:${random_password.mongo_user_password.result}@${aws_instance.db_server.private_ip}:27017/sketchydb?authSource=admin"
+  })
 }
 
 resource "aws_iam_role" "mongo_instance_role" {
@@ -89,6 +106,7 @@ resource "aws_iam_role" "mongo_instance_role" {
   })
 }
 
+# Grant the EC2 instance permission to fetch both the admin and user secrets
 resource "aws_iam_role_policy" "mongo_permissions" {
   name = "mongo-instance-permissions"
   role = aws_iam_role.mongo_instance_role.id
@@ -100,8 +118,8 @@ resource "aws_iam_role_policy" "mongo_permissions" {
         Effect = "Allow",
         Action = "secretsmanager:GetSecretValue",
         Resource = [
-          aws_secretsmanager_secret.mongo_secrets.arn,
-          aws_secretsmanager_secret.mongo_secrets.arn
+          aws_secretsmanager_secret.mongo_manager.arn,
+          aws_secretsmanager_secret.mongo_user_secret.arn
         ]
       },
       {

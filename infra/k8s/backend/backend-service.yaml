@@ -1,4 +1,3 @@
-# backend-deployment.yaml
 apiVersion: v1
 kind: Service
 metadata:
@@ -7,9 +6,8 @@ spec:
   type: LoadBalancer
   ports:
   - port: 80
-    # This should match your backend container's port
     targetPort: 5000
     protocol: TCP
   selector:
-    # This must match the label of your backend pods
+    # This now correctly matches the pod's label
     app: sketchydraw-backend
