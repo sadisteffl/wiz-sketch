@@ -46,7 +46,3 @@ output "bastion_ssh_command" {
   value = "ssh -i 'eks-bastion-key.pem' ec2-user@${aws_instance.bastion_host.public_dns}"
 }
 
-output "certificate_arn" {
-  description = "The ARN of the newly created ACM certificate."
-  value       = aws_acm_certificate_validation.sketchy_cert_validation.certificate_arn
-}

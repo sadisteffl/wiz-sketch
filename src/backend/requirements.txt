@@ -1,4 +1,3 @@
 # requirements.txt
 flask
 pymongo
-Flask-Cors

@@ -5,9 +5,8 @@ metadata:
 spec:
   type: LoadBalancer
   ports:
-  - port: 80
-    targetPort: 5000
-    protocol: TCP
+    - port: 80
+      targetPort: 5000
+      protocol: TCP
   selector:
-    # This now correctly matches the pod's label
     app: sketchydraw-backend

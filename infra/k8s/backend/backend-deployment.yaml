@@ -1,8 +1,9 @@
-# FINAL and CORRECTED backend-deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: sketchydraw-backend
+  labels:
+    app: sketchydraw-backend
 spec:
   replicas: 1
   selector:
@@ -25,12 +26,10 @@ spec:
                 secretKeyRef:
                   name: sketchydraw-db-uri
                   key: DB_URI
-          # This tells the container where to find the mounted secret
           volumeMounts:
-          - name: secrets-store-inline
-            mountPath: "/mnt/secrets-store"
-            readOnly: true
-      # This tells Kubernetes to use the CSI driver to provide the secret
+            - name: secrets-store-inline
+              mountPath: "/mnt/secrets-store"
+              readOnly: true
       volumes:
         - name: secrets-store-inline
           csi:
