@@ -1,4 +1,4 @@
-# Sketchy-AI 
+# Sketchy-AI #test 
 Welcome to the "Sketchy-AI" repository, the home of a project that's as fun as it is intentionally flawed.
 
 The "Sketchy" Concept

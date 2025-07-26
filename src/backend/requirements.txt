@@ -1,6 +1,9 @@
+# requirements.txt
 flask
 torch
 torchvision
 pillow
 pymongo
 Flask-Cors
+flask
+pymongo

@@ -1,4 +1,4 @@
-#   bind sa-sketchydraw to cluster-admin
+#  sa-sketchydraw.yaml
 
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding

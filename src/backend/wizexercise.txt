@@ -1,1 +1,2 @@
+# wizexercise.txt
 This file is used as a marker for validation.
