@@ -1,0 +1,31 @@
+
+.item-container {
+  margin: 20px 0;
+}
+
+.item-image {
+  max-width: 100%;
+  height: auto;
+  border: 2px solid #61dafb;
+  border-radius: 8px;
+  background-color: #282c34;
+}
+
+.guess-input {
+  font-size: 1.2rem;
+  padding: 10px;
+  margin-right: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  width: 200px;
+  text-align: center;
+}
+
+.result-container {
+  margin-top: 20px;
+  padding: 20px;
+  background-color: #282c34;
+  border-radius: 8px;
+  min-width: 400px;
+  text-align: center;
+}
